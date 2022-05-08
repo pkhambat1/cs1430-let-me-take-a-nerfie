@@ -6,7 +6,7 @@ from gridencoder import GridEncoder
 B = 1
 D = 2
 
-enc = GridEncoder(D=D, L=2, C=1, base_resolution=4, log2_hashmap_size=5).cuda()
+enc = GridEncoder(D=D, L=2, C=1, N_min=4, log2_hashmap_size=5).cuda()
 #enc = GridEncoder(D=D, L=16, C=2, base_resolution=16).cuda()
 
 print(f"=== enc ===")

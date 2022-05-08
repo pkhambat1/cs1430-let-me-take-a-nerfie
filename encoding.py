@@ -60,11 +60,11 @@ def get_encoder(encoding, input_dim=3,
 
     elif encoding == 'hashgrid':
         from gridencoder import GridEncoder
-        encoder = GridEncoder(input_dim=input_dim, num_levels=num_levels, level_dim=level_dim, base_resolution=base_resolution, log2_hashmap_size=log2_hashmap_size, desired_resolution=desired_resolution, gridtype='hash')
+        encoder = GridEncoder(d=input_dim, L=num_levels, F=level_dim, N_min=base_resolution, log2_hashmap_size=log2_hashmap_size, N_max=desired_resolution, gridtype='hash')
     
     elif encoding == 'tiledgrid':
         from gridencoder import GridEncoder
-        encoder = GridEncoder(input_dim=input_dim, num_levels=num_levels, level_dim=level_dim, base_resolution=base_resolution, log2_hashmap_size=log2_hashmap_size, desired_resolution=desired_resolution, gridtype='tiled')
+        encoder = GridEncoder(d=input_dim, L=num_levels, F=level_dim, N_min=base_resolution, log2_hashmap_size=log2_hashmap_size, N_max=desired_resolution, gridtype='tiled')
     
     elif encoding == 'ash':
         from ashencoder import AshEncoder

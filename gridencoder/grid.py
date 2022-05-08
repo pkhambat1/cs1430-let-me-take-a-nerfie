@@ -23,33 +23,33 @@ class _grid_encode(Function):
         # inputs: [B, D], float in [0, 1]
         # embeddings: [sO, C], float
         # offsets: [L + 1], int
-        # RETURN: [B, F], float
+        # RETURN: [B, _F], float
 
         inputs = inputs.contiguous()
         embeddings = embeddings.contiguous()
         offsets = offsets.contiguous()
-
+        
         B, D = inputs.shape # batch size, coord dim
         L = offsets.shape[0] - 1 # level
-        C = embeddings.shape[1] # embedding dim for each level
+        F = embeddings.shape[1] # embedding dim for each level
         S = np.log2(per_level_scale) # resolution multiplier at each level, apply log2 for later CUDA exp2f
         H = base_resolution # base resolution
 
         # L first, optimize cache for cuda kernel, but needs an extra permute later
-        outputs = torch.empty(L, B, C, device=inputs.device, dtype=inputs.dtype)
+        outputs = torch.empty(L, B, F, device=inputs.device, dtype=inputs.dtype)
 
         if calc_grad_inputs:
-            dy_dx = torch.empty(B, L * D * C, device=inputs.device, dtype=inputs.dtype)
+            dy_dx = torch.empty(B, L * D * F, device=inputs.device, dtype=inputs.dtype)
         else:
             dy_dx = torch.empty(1, device=inputs.device, dtype=inputs.dtype)
 
-        _backend.grid_encode_forward(inputs, embeddings, offsets, outputs, B, D, C, L, S, H, calc_grad_inputs, dy_dx, gridtype)
+        _backend.grid_encode_forward(inputs, embeddings, offsets, outputs, B, D, F, L, S, H, calc_grad_inputs, dy_dx, gridtype)
 
         # permute back to [B, L * C]
-        outputs = outputs.permute(1, 0, 2).reshape(B, L * C)
+        outputs = outputs.permute(1, 0, 2).reshape(B, L * F)
 
         ctx.save_for_backward(inputs, embeddings, offsets, dy_dx)
-        ctx.dims = [B, D, C, L, S, H, gridtype]
+        ctx.dims = [B, D, F, L, S, H, gridtype]
         ctx.calc_grad_inputs = calc_grad_inputs
 
         return outputs
@@ -85,44 +85,51 @@ grid_encode = _grid_encode.apply
 
 
 class GridEncoder(nn.Module):
-    def __init__(self, input_dim=3, num_levels=16, level_dim=2, per_level_scale=2, base_resolution=16, log2_hashmap_size=19, desired_resolution=None, gridtype='hash'):
+    def __init__(self, d=3, L=16, F=2, b=2, N_min=16, log2_hashmap_size=19, N_max=None, gridtype='hash'):
         super().__init__()
-
+        
         # the finest resolution desired at the last level, if provided, overridee per_level_scale
-        if desired_resolution is not None:
-            per_level_scale = np.exp2(np.log2(desired_resolution / base_resolution) / (num_levels - 1))
+        if N_max is not None:
+            b = np.exp2(np.log2(N_max / N_min) / (L - 1)) #  b \in [1.26, 2] 
+        '''
+        if N_max (the finest resolution) has not been provided, you assume that it takes the maximum value (2^19)
+            - as a result, b gets the highest possible value, 2.
+            - if N_max took the lowest value of 512 (or 2^9 as specified in the paper), b would take the lowest value of 1.26
+                in accordance with the above equation.
+        '''
+        # b gets highest value (2.0) by default
 
-        self.input_dim = input_dim # coord dims, 2 or 3
-        self.num_levels = num_levels # num levels, each level multiply resolution by 2
-        self.level_dim = level_dim # encode channels per level
-        self.per_level_scale = per_level_scale # multiply resolution by this scale at each level.
+        self.input_dim = d # coord dims, 2 or 3
+        self.num_levels = L # num levels, each level multiply resolution by 2
+        self.level_dim = F # encode channels per level
+        self.per_level_scale = b # multiply resolution by this scale at each level.
         self.log2_hashmap_size = log2_hashmap_size
-        self.base_resolution = base_resolution
-        self.output_dim = num_levels * level_dim
+        self.base_resolution = N_min # The coarsest resolution 
+        self.output_dim = L * F # Size of encoded input before adding auxilliary input, \xi
         self.gridtype = gridtype
         self.gridtype_id = _gridtype_to_id[gridtype] # "tiled" or "hash"
 
-        if level_dim % 2 != 0:
+        if F % 2 != 0:
             print('[WARN] detected HashGrid level_dim % 2 != 0, which will cause very slow backward is also enabled fp16! (maybe fix later)')
 
         # allocate parameters
         offsets = []
         offset = 0
         self.max_params = 2 ** log2_hashmap_size
-        for i in range(num_levels):
-            resolution = int(np.ceil(base_resolution * per_level_scale ** i))
-            params_in_level = min(self.max_params, (resolution + 1) ** input_dim) # limit max number
+        for l in range(L):
+            N_l = int(np.ceil(N_min * b ** l)) # resolution of current level
+            T = min(self.max_params, (N_l + 1) ** d) # limit max number
             #params_in_level = np.ceil(params_in_level / 8) * 8 # make divisible
             offsets.append(offset)
-            offset += params_in_level
+            offset += T
         offsets.append(offset)
         offsets = torch.from_numpy(np.array(offsets, dtype=np.int32))
         self.register_buffer('offsets', offsets)
         
-        self.n_params = offsets[-1] * level_dim
+        self.n_params = offsets[-1] * F # total parameters across all levels
 
         # parameters
-        self.embeddings = nn.Parameter(torch.empty(offset, level_dim))
+        self.embeddings = nn.Parameter(torch.empty(offset, F)) # datastructure to store all the hashtables
 
         self.reset_parameters()
     
@@ -147,6 +154,6 @@ class GridEncoder(nn.Module):
         outputs = grid_encode(inputs, self.embeddings, self.offsets, self.per_level_scale, self.base_resolution, inputs.requires_grad, self.gridtype_id)
         outputs = outputs.view(prefix_shape + [self.output_dim])
 
-        #print('outputs', outputs.shape, outputs.dtype, outputs.min().item(), outputs.max().item())
+        print('outputs.shape', outputs.shape)
 
         return outputs

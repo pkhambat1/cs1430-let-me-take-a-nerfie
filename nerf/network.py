@@ -73,6 +73,8 @@ class NeRFNetwork(NeRFRenderer):
         # sigma
         x = self.encoder(x, bound=self.bound)
 
+        print('x.shape: ', x.shape)
+
         h = x
         for l in range(self.num_layers):
             h = self.sigma_net[l](h)

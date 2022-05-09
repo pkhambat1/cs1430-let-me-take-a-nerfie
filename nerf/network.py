@@ -50,7 +50,7 @@ class NeRFNetwork(NeRFRenderer):
         self.num_layers_color = num_layers_color # number of layers in the color network     
         self.hidden_dim_color = hidden_dim_color # size of hidden dimension
         self.encoder_dir, self.in_dim_color = get_encoder(encoding_dir) # initialize the viewing direction input encoder
-        print
+        print('self.in_dim_color', self.in_dim_color)
         self.in_dim_color += self.geo_feat_dim # add the shape of 15 SH features to the shape of the encoded viewing directions
         
         # initialize the color network

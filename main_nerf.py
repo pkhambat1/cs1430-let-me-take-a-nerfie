@@ -78,28 +78,22 @@ if __name__ == '__main__':
     print(opt)
     
     seed_everything(opt.seed)
-
-
-
     base_params = {'encoding': "hashgrid",
                     'bound': opt.bound,
                     'cuda_ray': opt.cuda_ray,
                     'density_scale': 10 if opt.mode == 'blender' else 1
                 }
 
-
     # take in hyperparameters
     if opt.hyperparams_path:
         hyperparams = pickle.load(open(opt.hyperparams_path, "rb"))
-        model = NeRFNetwork(
-            **base_params,
-            **hyperparams,
-        )      
     else:
-        model = NeRFNetwork(
-            **base_params
-        )
+        hyperparams = dict()
 
+    model = NeRFNetwork(
+        **base_params,
+        **hyperparams
+    )
     print(model)
 
     criterion = torch.nn.MSELoss(reduction='none')

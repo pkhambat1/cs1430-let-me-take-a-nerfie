@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from main_nerf import opt
 
 class FreqEncoder(nn.Module):
     def __init__(self, input_dim, max_freq_log2, N_freqs,
@@ -42,33 +43,35 @@ class FreqEncoder(nn.Module):
 
         return out
 
-def get_encoder(encoding, input_dim=3, 
+def get_encoder(encoding, d=3, 
                 multires=6, 
                 degree=4,
-                num_levels=16, level_dim=2, base_resolution=16, log2_hashmap_size=19, desired_resolution=2048,
+                L=16, F=2, b=2, N_min=16, log2_hashmap_size=19, N_max=2048,
                 **kwargs):
 
+
+
     if encoding == 'None':
-        return lambda x, **kwargs: x, input_dim
+        return lambda x, **kwargs: x, d
     
     elif encoding == 'frequency':
-        encoder = FreqEncoder(input_dim=input_dim, max_freq_log2=multires-1, N_freqs=multires, log_sampling=True)
+        encoder = FreqEncoder(input_dim=d, max_freq_log2=multires-1, N_freqs=multires, log_sampling=True)
 
     elif encoding == 'sphere_harmonics':
         from shencoder import SHEncoder
-        encoder = SHEncoder(input_dim=input_dim, degree=degree)
+        encoder = SHEncoder(input_dim=d, degree=degree)
 
     elif encoding == 'hashgrid':
         from gridencoder import GridEncoder
-        encoder = GridEncoder(d=input_dim, L=num_levels, F=level_dim, N_min=base_resolution, log2_hashmap_size=log2_hashmap_size, N_max=desired_resolution, gridtype='hash')
+        encoder = GridEncoder(d=d, L=L, F=F, b=b, N_min=N_min, log2_hashmap_size=log2_hashmap_size, N_max=N_max, gridtype='hash')
     
     elif encoding == 'tiledgrid':
         from gridencoder import GridEncoder
-        encoder = GridEncoder(d=input_dim, L=num_levels, F=level_dim, N_min=base_resolution, log2_hashmap_size=log2_hashmap_size, N_max=desired_resolution, gridtype='tiled')
+        encoder = GridEncoder(d=d, L=L, F=F, N_min=N_min, log2_hashmap_size=log2_hashmap_size, N_max=N_max, gridtype='tiled')
     
     elif encoding == 'ash':
         from ashencoder import AshEncoder
-        encoder = AshEncoder(input_dim=input_dim, output_dim=16, log2_hashmap_size=log2_hashmap_size, resolution=desired_resolution)
+        encoder = AshEncoder(input_dim=d, output_dim=16, log2_hashmap_size=log2_hashmap_size, resolution=N_max)
 
     else:
         raise NotImplementedError()

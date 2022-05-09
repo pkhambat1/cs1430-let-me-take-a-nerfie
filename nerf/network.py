@@ -96,6 +96,7 @@ class NeRFNetwork(NeRFRenderer):
 
         h = torch.cat([d, geo_feat], dim=-1) # concatenate the hidden representation obtained from the sigma network with the encoded viewing direction parameter
         for l in range(self.num_layers_color): # forward pass of the color network
+            print('h.shape', h.shape)
             h = self.color_net[l](h)
             if l != self.num_layers_color - 1:
                 h = F.relu(h, inplace=True)

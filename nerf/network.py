@@ -25,9 +25,7 @@ class NeRFNetwork(NeRFRenderer):
         self.num_layers = num_layers # number of layers in the sigma network
         self.hidden_dim = hidden_dim # size of hidden dimension
         self.geo_feat_dim = geo_feat_dim # size of output dimension (not including the 1 output that represents the spacial density)
-        # self.encoder, self.in_dim = get_encoder(encoding, N_max=2048 * bound, d=3, L=16, F=2, b=2, N_min=16, log2_hashmap_size=19) # initialize the input encoder
-        self.encoder, self.in_dim = get_encoder(encoding, N_max=2048 * bound) # initialize the input encoder
-
+        self.encoder, self.in_dim = get_encoder(encoding, N_max=2048 * bound, d=3, L=16, F=2, b=2, N_min=16, log2_hashmap_size=19) # initialize the input encoder
 
         # initialize the sigma network
         sigma_net = []

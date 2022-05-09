@@ -89,10 +89,10 @@ if __name__ == '__main__':
         hyperparams = pickle.load(open(opt.hyperparams_path, "rb"))
     else:
         hyperparams = dict()
-
+    
     model = NeRFNetwork(
         **base_params,
-        # **hyperparams
+        **hyperparams
     )
     print(model)
 

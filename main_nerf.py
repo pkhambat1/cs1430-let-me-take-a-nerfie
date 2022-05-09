@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--tcnn', action='store_true', help="use TCNN backend")
 
     ### gridencoder args
-    parser.add_argument('hyperparams_path', type=str)
+    parser.add_argument('hyperparams_path', type=str, default='')
 
     ### dataset options
     parser.add_argument('--mode', type=str, default='colmap', help="dataset mode, supports (colmap, blender)")

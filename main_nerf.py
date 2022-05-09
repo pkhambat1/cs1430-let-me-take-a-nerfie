@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     model = NeRFNetwork(
         **base_params,
-        **hyperparams
+        # **hyperparams
     )
     print(model)
 

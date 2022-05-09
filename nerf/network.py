@@ -57,7 +57,7 @@ class NeRFNetwork(NeRFRenderer):
         color_net =  []
         for l in range(num_layers_color):
             if l == 0:
-                in_dim = self.in_dim # the first layer gets in_dim size of inputs
+                in_dim = self.in_dim_color # the first layer gets in_dim size of inputs
             else:
                 in_dim = hidden_dim # the hidden layers get hidden_dim size inputs
             

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from main_nerf import opt
+
 
 class FreqEncoder(nn.Module):
     def __init__(self, input_dim, max_freq_log2, N_freqs,

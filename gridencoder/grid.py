@@ -144,7 +144,7 @@ class GridEncoder(nn.Module):
         self.embeddings.data.uniform_(-std, std) # initialize embeddings as a continuous uniform distribution
 
     def __repr__(self):
-        return f"GridEncoder: input_dim={self.input_dim} num_levels={self.num_levels} level_dim={self.level_dim} base_resolution={self.base_resolution} per_level_scale={self.per_level_scale} params={tuple(self.embeddings.shape)} gridtype={self.gridtype}"
+        return f"GridEncoder: d={self.input_dim} L={self.num_levels} F={self.level_dim} N_min={self.base_resolution} b={self.per_level_scale} params={tuple(self.embeddings.shape)} gridtype={self.gridtype}"
     
     def forward(self, inputs, bound=1):
         # inputs: [..., input_dim], normalized real world positions in [-bound, bound]

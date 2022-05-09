@@ -138,6 +138,14 @@ class GridEncoder(nn.Module):
         plt.ylabel('Offset')
         plt.xlabel('Level')
         plt.show()
+
+        print('offsets', offsets)
+        plt.plot(range(len(offsets)),offsets)
+        plt.title('GridEncoder Offsets')
+        plt.ylabel('Offset')
+        plt.xlabel('Level')
+        plt.show()
+
         # plt.savefig(f'gridencoder/plots/ge_{d}_{L}_{F}_{b}_{N_min}_{log2_hashmap_size}_{N_max}_{gridtype}')
     
     def reset_parameters(self):

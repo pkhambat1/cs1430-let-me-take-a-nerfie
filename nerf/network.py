@@ -67,7 +67,7 @@ class NeRFNetwork(NeRFRenderer):
 
     
     def forward(self, x, d):
-        # x: [N, 3], in [-bound, bound]
+        # x: [N, 3], in [-bound, bound]; where N: batch size
         # d: [N, 3], nomalized in [-1, 1]
 
         # sigma

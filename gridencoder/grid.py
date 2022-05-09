@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 from torch.cuda.amp import custom_bwd, custom_fwd 
+import matplotlib.pyplot as plt
 
 try:
     import _gridencoder as _backend
@@ -132,6 +133,11 @@ class GridEncoder(nn.Module):
         self.embeddings = nn.Parameter(torch.empty(offset, F)) # datastructure to store all the hashtables
 
         self.reset_parameters()
+        print('offsets', offsets)
+        plt.plot(range(len(offsets)),offsets)
+        plt.title('GridEncoder Offsets')
+        plt.ylabel('Offset')
+        plt.savefig('gridencoder/plots')
     
     def reset_parameters(self):
         std = 1e-4

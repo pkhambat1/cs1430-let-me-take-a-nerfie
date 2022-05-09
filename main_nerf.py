@@ -4,6 +4,7 @@ import argparse
 from nerf.provider import NeRFDataset
 from nerf.gui import NeRFGUI
 from nerf.utils import *
+import pickle
 
 #torch.autograd.set_detect_anomaly(True)
 
@@ -30,6 +31,9 @@ if __name__ == '__main__':
     parser.add_argument('--fp16', action='store_true', help="use amp mixed precision training")
     parser.add_argument('--ff', action='store_true', help="use fully-fused MLP")
     parser.add_argument('--tcnn', action='store_true', help="use TCNN backend")
+
+    ### gridencoder args
+    parser.add_argument('hyperparams_path', type=str)
 
     ### dataset options
     parser.add_argument('--mode', type=str, default='colmap', help="dataset mode, supports (colmap, blender)")
@@ -68,17 +72,34 @@ if __name__ == '__main__':
     else:
         from nerf.network import NeRFNetwork
 
+        
+
+
     print(opt)
     
     seed_everything(opt.seed)
 
-    model = NeRFNetwork(
-        encoding="hashgrid",
-        bound=opt.bound,
-        cuda_ray=opt.cuda_ray,
-        density_scale=10 if opt.mode == 'blender' else 1,
-    )
-    
+
+
+    base_params = {'encoding': "hashgrid",
+                    'bound': opt.bound,
+                    'cuda_ray': opt.cuda_ray,
+                    'density_scale': 10 if opt.mode == 'blender' else 1
+                }
+
+
+    # take in hyperparameters
+    if opt.hyperparams_path:
+        hyperparams = pickle.load(open(opt.hyperparams_path, "rb"))
+        model = NeRFNetwork(
+            **base_params,
+            **hyperparams,
+        )      
+    else:
+        model = NeRFNetwork(
+            **base_params
+        )
+
     print(model)
 
     criterion = torch.nn.MSELoss(reduction='none')

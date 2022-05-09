@@ -147,6 +147,7 @@ class GridEncoder(nn.Module):
         inputs = (inputs + bound) / (2 * bound) # map to [0, 1]
         
         #print('inputs', inputs.shape, inputs.dtype, inputs.min().item(), inputs.max().item())
+        # inputs shape: torch.Size([2097152, 3])
 
         prefix_shape = list(inputs.shape[:-1])
         inputs = inputs.view(-1, self.input_dim)
@@ -154,6 +155,7 @@ class GridEncoder(nn.Module):
         outputs = grid_encode(inputs, self.embeddings, self.offsets, self.per_level_scale, self.base_resolution, inputs.requires_grad, self.gridtype_id)
         outputs = outputs.view(prefix_shape + [self.output_dim])
 
-        print('outputs.shape', outputs.shape)
+        # print('outputs.shape', outputs.shape) 
+        # outputs shape: torch.Size([2097152, 32])
 
         return outputs

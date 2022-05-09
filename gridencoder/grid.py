@@ -53,7 +53,7 @@ class _grid_encode(Function):
         ctx.dims = [B, D, F, L, S, H, gridtype]
         ctx.calc_grad_inputs = calc_grad_inputs
 
-        return outputs
+        return outputs # shape: (batch_size, L*F)
     
     @staticmethod
     #@once_differentiable
@@ -120,28 +120,27 @@ class GridEncoder(nn.Module):
         for l in range(L):
             N_l = int(np.ceil(N_min * b ** l)) # resolution of current level
             T = min(self.max_params, (N_l + 1) ** d) # limit max number
-            #params_in_level = np.ceil(params_in_level / 8) * 8 # make divisible
             offsets.append(offset)
             offset += T
         offsets.append(offset)
-        offsets = torch.from_numpy(np.array(offsets, dtype=np.int32))
+        offsets = torch.from_numpy(np.array(offsets, dtype=np.int32)) # cast the offsets list to a torch tensor
         self.register_buffer('offsets', offsets)
         
-        self.n_params = offsets[-1] * F # total parameters across all levels
+        self.n_params = offsets[-1] * F # total number of parameters across all levels
 
         # parameters
-        self.embeddings = nn.Parameter(torch.empty(offset, F)) # datastructure to store all the hashtables
+        self.embeddings = nn.Parameter(torch.empty(offset, F)) # datastructure to store the hashtables
 
         self.reset_parameters()
         print('offsets', offsets)
         plt.plot(range(len(offsets)),offsets)
         plt.title('GridEncoder Offsets')
         plt.ylabel('Offset')
-        plt.savefig('gridencoder/plots')
+        plt.savefig(f'gridencoder/plots/ge_{d}_{L}_{F}_{b}_{N_min}_{log2_hashmap_size}_{N_max}_{gridtype}')
     
     def reset_parameters(self):
         std = 1e-4
-        self.embeddings.data.uniform_(-std, std)
+        self.embeddings.data.uniform_(-std, std) # initialize embeddings as a continuous uniform distribution
 
     def __repr__(self):
         return f"GridEncoder: input_dim={self.input_dim} num_levels={self.num_levels} level_dim={self.level_dim} base_resolution={self.base_resolution} per_level_scale={self.per_level_scale} params={tuple(self.embeddings.shape)} gridtype={self.gridtype}"

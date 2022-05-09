@@ -22,48 +22,50 @@ class NeRFNetwork(NeRFRenderer):
         super().__init__(bound, **kwargs)
 
         # sigma network
-        self.num_layers = num_layers
-        self.hidden_dim = hidden_dim
-        self.geo_feat_dim = geo_feat_dim
-        self.encoder, self.in_dim = get_encoder(encoding, desired_resolution=2048 * bound)
+        self.num_layers = num_layers # number of layers in the sigma network
+        self.hidden_dim = hidden_dim # size of hidden dimension
+        self.geo_feat_dim = geo_feat_dim # size of output dimension (not including the 1 output that represents the spacial density)
+        self.encoder, self.in_dim = get_encoder(encoding, desired_resolution=2048 * bound) # initialize the input encoder
 
+        # initialize the sigma network
         sigma_net = []
         for l in range(num_layers):
             if l == 0:
-                in_dim = self.in_dim
+                in_dim = self.in_dim # the first layer gets in_dim size of inputs
             else:
-                in_dim = hidden_dim
+                in_dim = hidden_dim # the hidden layers get hidden_dim size inputs
             
-            if l == num_layers - 1:
+            if l == num_layers - 1: # if l is the last layer
                 out_dim = 1 + self.geo_feat_dim # 1 sigma + 15 SH features for color
-            else:
+            else: # if it is a hidden layer
                 out_dim = hidden_dim
             
-            sigma_net.append(nn.Linear(in_dim, out_dim, bias=False))
+            sigma_net.append(nn.Linear(in_dim, out_dim, bias=False)) # append linear layers
 
-        self.sigma_net = nn.ModuleList(sigma_net)
+        self.sigma_net = nn.ModuleList(sigma_net) # create a module with the initialized layers
 
         # color network
-        self.num_layers_color = num_layers_color        
-        self.hidden_dim_color = hidden_dim_color
-        self.encoder_dir, self.in_dim_color = get_encoder(encoding_dir)
-        self.in_dim_color += self.geo_feat_dim
+        self.num_layers_color = num_layers_color # number of layers in the color network     
+        self.hidden_dim_color = hidden_dim_color # size of hidden dimension
+        self.encoder_dir, self.in_dim_color = get_encoder(encoding_dir) # initialize the viewing direction input encoder
+        self.in_dim_color += self.geo_feat_dim # add the shape of 15 SH features to the shape of the encoded viewing directions
         
+        # initialize the color network
         color_net =  []
         for l in range(num_layers_color):
             if l == 0:
-                in_dim = self.in_dim_color
+                in_dim = self.in_dim # the first layer gets in_dim size of inputs
             else:
-                in_dim = hidden_dim
+                in_dim = hidden_dim # the hidden layers get hidden_dim size inputs
             
             if l == num_layers_color - 1:
                 out_dim = 3 # 3 rgb
             else:
                 out_dim = hidden_dim
             
-            color_net.append(nn.Linear(in_dim, out_dim, bias=False))
+            color_net.append(nn.Linear(in_dim, out_dim, bias=False)) # append linear layers
 
-        self.color_net = nn.ModuleList(color_net)
+        self.color_net = nn.ModuleList(color_net) # create a module with the initialized layers
 
     
     def forward(self, x, d):
@@ -71,25 +73,26 @@ class NeRFNetwork(NeRFRenderer):
         # d: [N, 3], nomalized in [-1, 1]
 
         # sigma
-        x = self.encoder(x, bound=self.bound)
+        x = self.encoder(x, bound=self.bound) # encode the coordinates using multiresolution hashmap technique
 
-        print('x.shape: ', x.shape)
-
+        # The sigma network to predict the space density of a given voxel
         h = x
-        for l in range(self.num_layers):
+        for l in range(self.num_layers): # forward pass of the sigma network
             h = self.sigma_net[l](h)
             if l != self.num_layers - 1:
                 h = F.relu(h, inplace=True)
 
-        #sigma = F.relu(h[..., 0])
-        sigma = trunc_exp(h[..., 0])
-        geo_feat = h[..., 1:]
+        sigma = trunc_exp(h[..., 0]) # the first output is considered the space density
+        geo_feat = h[..., 1:] # the rest of the output is the hidden representation
 
         # color
         
-        d = self.encoder_dir(d)
-        h = torch.cat([d, geo_feat], dim=-1)
-        for l in range(self.num_layers_color):
+        d = self.encoder_dir(d) 
+        # d: the view direction projected onto the 
+            # first 16 coefficients of the spherical harmonics basis (frequency encoding over unit vectors)
+
+        h = torch.cat([d, geo_feat], dim=-1) # concatenate the hidden representation obtained from the sigma network with the encoded viewing direction parameter
+        for l in range(self.num_layers_color): # forward pass of the color network
             h = self.color_net[l](h)
             if l != self.num_layers_color - 1:
                 h = F.relu(h, inplace=True)
@@ -97,7 +100,7 @@ class NeRFNetwork(NeRFRenderer):
         # sigmoid activation for rgb
         color = torch.sigmoid(h)
 
-        return sigma, color
+        return sigma, color # return the predicted spacial density and the color for the input voxels
 
     def density(self, x):
         # x: [N, 3], in [-bound, bound]

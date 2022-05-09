@@ -16,7 +16,9 @@ class NeRFNetwork(NeRFRenderer):
                  geo_feat_dim=15,
                  num_layers_color=3,
                  hidden_dim_color=64,
-                 bound=1,
+                 bound=1, 
+                 d=3,
+                L=16, F=2, b=2, N_min=16, log2_hashmap_size=19,
                  **kwargs,
                  ):
         super().__init__(bound, **kwargs)

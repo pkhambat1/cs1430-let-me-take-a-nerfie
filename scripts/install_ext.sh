@@ -10,6 +10,6 @@ cd shencoder
 pip install .
 cd .. 
 
-cd ffmlp
-pip install .
-cd ..
+# cd ffmlp
+# pip install .
+# cd ..

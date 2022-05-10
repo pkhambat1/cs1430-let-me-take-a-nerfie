@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ffmlp import FFMLP
+# from TO_BE_DELETED_ffmlp import FFMLP
 import math
 
 import tinycudann as tcnn

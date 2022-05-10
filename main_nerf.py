@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     ### network backbone options
     parser.add_argument('--fp16', action='store_true', help="use amp mixed precision training")
-    parser.add_argument('--ff', action='store_true', help="use fully-fused MLP")
+    # parser.add_argument('--ff', action='store_true', help="use fully-fused MLP")
     parser.add_argument('--tcnn', action='store_true', help="use TCNN backend")
 
     ### gridencoder args

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from encoding import get_encoder
-from ffmlp import FFMLP
+# from TO_BE_DELETED_ffmlp import FFMLP
 
 
 class SDFNetwork(nn.Module):

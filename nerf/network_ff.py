@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from encoding import get_encoder
 from activation import trunc_exp
-from ffmlp import FFMLP
+# from TO_BE_DELETED_ffmlp import FFMLP
 
 from .renderer import NeRFRenderer
 

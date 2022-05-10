@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     else:
         from sdf.provider import SDFDataset
-        from loss import mape_loss
+        # from TO_BE_DELETED_loss import mape_loss
 
         train_dataset = SDFDataset(opt.path, size=100, num_samples=2**18)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=True)

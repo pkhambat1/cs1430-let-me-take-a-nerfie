@@ -63,10 +63,11 @@ if __name__ == '__main__':
         opt.cuda_ray = True
         opt.preload = True
 
-    if opt.ff:
-        opt.fp16 = True
-        from nerf.network_ff import NeRFNetwork
-    elif opt.tcnn:
+    # if opt.ff:
+    #     opt.fp16 = True
+    #     from nerf.network_ff import NeRFNetwork
+    # elif
+    if opt.tcnn:
         opt.fp16 = True
         from nerf.network_tcnn import NeRFNetwork
     else:
